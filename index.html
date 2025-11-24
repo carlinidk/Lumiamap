@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuminaMap - Projection Mapping Tool</title>
+    
+    <!-- Tailwind CSS for layout utility -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <div id="app-container">
+        <!-- Sidebar Controls -->
+        <aside id="sidebar">
+            <div class="flex items-center gap-2 mb-6 text-blue-400">
+                <i data-lucide="projector" class="w-6 h-6"></i>
+                <h1 class="text-xl font-bold tracking-tight">LuminaMap</h1>
+            </div>
+
+            <div class="control-group">
+                <h3 class="section-title">Sources</h3>
+                <input type="file" id="video-upload" accept="video/*" class="hidden">
+                <button onclick="document.getElementById('video-upload').click()" class="btn btn-secondary mb-2">
+                    <i data-lucide="upload"></i> Upload Video
+                </button>
+                <div id="video-status" class="text-xs text-gray-400 truncate">No video loaded</div>
+            </div>
+
+            <div class="control-group">
+                <h3 class="section-title">Surfaces</h3>
+                <button id="add-surface-btn" class="btn btn-secondary mb-2">
+                    <i data-lucide="plus-square"></i> Add Quad Surface
+                </button>
+                <button id="clear-all-btn" class="btn btn-danger">
+                    <i data-lucide="trash-2"></i> Clear All
+                </button>
+            </div>
+
+            <div class="control-group mt-auto">
+                <div class="instructions">
+                    <p>1. Drag corners to map to object.</p>
+                    <p>2. Double click center to delete.</p>
+                </div>
+                <button id="go-live-btn" class="btn btn-primary">
+                    <i data-lucide="play-circle"></i> GO LIVE (Fullscreen)
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main id="workspace">
+            <canvas id="main-canvas"></canvas>
+            
+            <!-- Floating Exit Button (Visible on hover in live mode) -->
+            <div id="toggle-ui-btn" title="Exit Live Mode">
+                <i data-lucide="x"></i>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden Video Element for Source -->
+    <video id="source-video" class="hidden-video" loop muted playsinline></video>
+
+    <!-- Main Application Logic -->
+    <script src="js/main.js"></script>
+</body>
+</html>
+
+
