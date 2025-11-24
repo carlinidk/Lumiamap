@@ -1,0 +1,141 @@
+/* Global Reset & Basics */
+body {
+    background-color: #1a1a1a;
+    color: white;
+    overflow: hidden;
+    touch-action: none; /* Critical for touch dragging */
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+#app-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Sidebar Styling */
+#sidebar {
+    width: 300px;
+    background-color: #0f0f0f;
+    border-right: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    z-index: 50;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+#sidebar.hidden-ui {
+    transform: translateX(-100%);
+    position: absolute;
+}
+
+.section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+/* Workspace & Canvas */
+#workspace {
+    flex-grow: 1;
+    position: relative;
+    background-color: #000;
+    /* Grid pattern for editing mode */
+    background-image: radial-gradient(#333 1px, transparent 1px);
+    background-size: 20px 20px;
+    overflow: hidden;
+    cursor: crosshair;
+}
+
+#workspace.live-mode {
+    background-image: none; /* Pure black for projection */
+    background-color: black;
+    cursor: none; /* Hide cursor in live mode */
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Buttons */
+.control-group {
+    margin-bottom: 1.5rem;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+    outline: none;
+}
+
+.btn-primary {
+    background-color: #3b82f6;
+    color: white;
+}
+.btn-primary:hover { background-color: #2563eb; }
+
+.btn-secondary {
+    background-color: #27272a;
+    color: #e4e4e7;
+    border: 1px solid #3f3f46;
+}
+.btn-secondary:hover { background-color: #3f3f46; }
+
+.btn-danger {
+    background-color: #ef4444;
+    color: white;
+}
+.btn-danger:hover { background-color: #dc2626; }
+
+/* Utility */
+.hidden-video {
+    display: none;
+}
+
+.instructions {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+/* Floating Toggle Button (Live Mode) */
+#toggle-ui-btn {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: none;
+    transition: background 0.2s;
+}
+
+#toggle-ui-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+#workspace.live-mode:hover #toggle-ui-btn {
+    display: flex;
+}
+
