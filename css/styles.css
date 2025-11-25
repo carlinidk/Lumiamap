@@ -8,42 +8,13 @@ body {
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-#app-container {
-    display: flex;
+/* WORKSPACE: Always fills the whole screen */
+#workspace {
+    position: fixed;
+    top: 0;
+    left: 0;
     height: 100vh;
     width: 100vw;
-}
-
-/* Sidebar Styling */
-#sidebar {
-    width: 300px;
-    background-color: #0f0f0f;
-    border-right: 1px solid #333;
-    display: flex;
-    flex-direction: column;
-    padding: 1rem;
-    z-index: 50;
-    transition: transform 0.3s ease;
-    flex-shrink: 0;
-}
-
-#sidebar.hidden-ui {
-    transform: translateX(-100%);
-    position: absolute;
-}
-
-.section-title {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: #6b7280;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-/* Workspace & Canvas */
-#workspace {
-    flex-grow: 1;
-    position: relative;
     background-color: #000;
     /* Grid pattern for editing mode */
     background-image: radial-gradient(#333 1px, transparent 1px);
@@ -66,11 +37,41 @@ canvas {
     height: 100%;
 }
 
-/* Buttons */
+/* SIDEBAR: Floating/Overlay UI */
+#sidebar {
+    position: fixed; /* Fixed position relative to viewport */
+    top: 0;
+    left: 0;
+    width: 300px;
+    height: 100vh;
+    background-color: #0f0f0f;
+    border-right: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    z-index: 50;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+/* HIDES THE SIDEBAR (The new "Go Live" state) */
+#sidebar.hidden-ui {
+    transform: translateX(-100%);
+    box-shadow: none;
+}
+
+.section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+/* Buttons (Styles unchanged, retained for completeness) */
 .control-group {
     margin-bottom: 1.5rem;
 }
-
 .btn {
     display: flex;
     align-items: center;
@@ -85,30 +86,13 @@ canvas {
     border: none;
     outline: none;
 }
-
-.btn-primary {
-    background-color: #3b82f6;
-    color: white;
-}
+.btn-primary { background-color: #3b82f6; color: white; }
 .btn-primary:hover { background-color: #2563eb; }
-
-.btn-secondary {
-    background-color: #27272a;
-    color: #e4e4e7;
-    border: 1px solid #3f3f46;
-}
+.btn-secondary { background-color: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; }
 .btn-secondary:hover { background-color: #3f3f46; }
-
-.btn-danger {
-    background-color: #ef4444;
-    color: white;
-}
+.btn-danger { background-color: #ef4444; color: white; }
 .btn-danger:hover { background-color: #dc2626; }
 
-/* Utility */
-.hidden-video {
-    display: none;
-}
 
 .instructions {
     font-size: 0.75rem;
@@ -116,9 +100,9 @@ canvas {
     margin-bottom: 0.5rem;
 }
 
-/* Floating Toggle Button (Live Mode) */
+/* Floating Toggle Button (Appears when sidebar is hidden) */
 #toggle-ui-btn {
-    position: absolute;
+    position: fixed; /* Fixed position relative to viewport */
     top: 1rem;
     left: 1rem;
     z-index: 100;
@@ -127,36 +111,15 @@ canvas {
     border-radius: 50%;
     color: white;
     cursor: pointer;
-    display: none;
+    display: none; /* Hidden by default */
     transition: background 0.2s;
+}
+
+#toggle-ui-btn.visible {
+    display: flex; /* Shown when in live mode */
 }
 
 #toggle-ui-btn:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
-#workspace.live-mode:hover #toggle-ui-btn {
-    display: flex;
-}
-
-/* New Source List Styling */
-.source-item {
-    padding: 0.5rem;
-    border-radius: 0.25rem;
-    background-color: #1f2937;
-    font-size: 0.875rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid transparent;
-}
-.source-item.active {
-    border-color: #3b82f6;
-    background-color: #1e3a8a;
-}
-.source-name {
-    flex-grow: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
