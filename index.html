@@ -16,8 +16,12 @@
 </head>
 <body>
 
-    <div id="app-container">
-        <!-- Sidebar Controls -->
+    <!-- Main Workspace now takes up the whole viewport -->
+    <main id="workspace">
+        <!-- Canvas is always 100% -->
+        <canvas id="main-canvas"></canvas>
+        
+        <!-- Sidebar Controls (Floating Overlay) -->
         <aside id="sidebar">
             <div class="flex items-center gap-2 mb-6 text-blue-400">
                 <i data-lucide="projector" class="w-6 h-6"></i>
@@ -30,7 +34,6 @@
                 <button onclick="document.getElementById('video-upload').click()" class="btn btn-secondary mb-2">
                     <i data-lucide="upload"></i> Add Video(s)
                 </button>
-                <!-- This is the list that will show all loaded videos -->
                 <div id="video-source-list" class="space-y-1">
                     <p class="text-xs text-gray-500" id="no-sources-message">No videos loaded yet.</p>
                 </div>
@@ -51,22 +54,18 @@
                     <p>1. Map surface points to physical objects.</p>
                     <p>2. Double click inside a surface to delete.</p>
                 </div>
+                <!-- The GO LIVE button now only hides the sidebar -->
                 <button id="go-live-btn" class="btn btn-primary">
-                    <i data-lucide="play-circle"></i> GO LIVE (Fullscreen)
+                    <i data-lucide="play-circle"></i> GO LIVE (Hide Controls)
                 </button>
             </div>
         </aside>
-
-        <!-- Main Workspace -->
-        <main id="workspace">
-            <canvas id="main-canvas"></canvas>
-            
-            <!-- Floating Exit Button (Visible on hover in live mode) -->
-            <div id="toggle-ui-btn" title="Exit Live Mode">
-                <i data-lucide="x"></i>
-            </div>
-        </main>
-    </div>
+        
+        <!-- Floating Show Controls Button (Visible in Live Mode) -->
+        <div id="toggle-ui-btn" title="Show Controls">
+            <i data-lucide="menu"></i>
+        </div>
+    </main>
 
     <!-- Main Application Logic -->
     <script src="js/main.js"></script>
