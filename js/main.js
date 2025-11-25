@@ -16,10 +16,7 @@ let surfaces = [];
 let videoSources = []; // [{ id: string, name: string, element: HTMLVideoElement }]
 let activePoint = null; 
 let activeSurface = null; 
-let isLive = false;
-let previousWidth = 0;
-let previousHeight = 0;
-
+let isLive = false; 
 
 // --- 2. Surface Class (The Quad Shape) ---
 class Surface {
@@ -60,6 +57,7 @@ class Surface {
             const minY = Math.min(...this.points.map(p => p.y));
             const maxY = Math.max(...this.points.map(p => p.y));
             
+            // Draw the assigned video centered in the quad's bounding box
             ctx.drawImage(video, minX, minY, maxX - minX, maxY - minY);
         } else {
             // Fallback color
@@ -113,12 +111,15 @@ class Surface {
 }
 
 // --- 3. Interaction Logic & Resizing ---
+
+// This function now just syncs the canvas resolution to the window size.
 function resize() {
-    canvas.width = workspace.clientWidth;
-    canvas.height = workspace.clientHeight;
+    // The canvas is always 100vw/100vh via CSS, but we must update the internal drawing resolution
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 }
 window.addEventListener('resize', resize);
-resize();
+resize(); // Initial call to set size
 
 function getMousePos(evt) {
     const rect = canvas.getBoundingClientRect();
@@ -128,6 +129,13 @@ function getMousePos(evt) {
 }
 
 const handleStart = (e) => {
+    // Prevent drag interactions if sidebar is open and click is over sidebar
+    if (!isLive) {
+        const rect = sidebar.getBoundingClientRect();
+        const pos = getMousePos(e);
+        if (pos.x < rect.width) return; // Ignore click if within sidebar bounds
+    }
+
     if (isLive) return;
     const pos = getMousePos(e);
     
@@ -175,56 +183,25 @@ canvas.addEventListener('touchmove', handleMove, {passive: false});
 canvas.addEventListener('touchend', handleEnd);
 
 
-// Scaling logic for fullscreen toggle
-function scaleSurfaces(oldW, oldH, newW, newH) {
-    if (oldW === 0 || oldH === 0 || (oldW === newW && oldH === newH)) return;
-
-    const scaleX = newW / oldW;
-    const scaleY = newH / oldH;
-    
-    surfaces.forEach(surface => {
-        surface.points.forEach(p => {
-            p.x *= scaleX;
-            p.y *= scaleY;
-        });
-    });
-
-    previousWidth = newW;
-    previousHeight = newH;
-}
+// --- 4. Live Mode Toggle (Simplified) ---
 
 function toggleLiveMode() {
     isLive = !isLive;
     if (isLive) {
-        // --- GOING LIVE ---
-        previousWidth = canvas.width;
-        previousHeight = canvas.height;
-
+        // GO LIVE: Hide Sidebar, Show floating menu button
         sidebar.classList.add('hidden-ui');
         workspace.classList.add('live-mode');
-        
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().then(() => {
-                scaleSurfaces(previousWidth, previousHeight, canvas.width, canvas.height);
-            });
-        }
-
+        toggleUiBtn.classList.add('visible');
     } else {
-        // --- EXITING LIVE MODE ---
-        if (document.exitFullscreen) {
-            document.exitFullscreen().then(() => {
-                const newWidth = canvas.width;
-                const newHeight = canvas.height;
-                scaleSurfaces(previousWidth, previousHeight, newWidth, newHeight); 
-            }).catch(err => {});
-        }
-        
+        // EXIT LIVE: Show Sidebar, Hide floating menu button
         sidebar.classList.remove('hidden-ui');
         workspace.classList.remove('live-mode');
+        toggleUiBtn.classList.remove('visible');
     }
 }
 
 goLiveBtn.addEventListener('click', toggleLiveMode);
+// The floating menu button is now the toggle button
 toggleUiBtn.addEventListener('click', toggleLiveMode);
 
 document.addEventListener('keydown', (e) => {
@@ -232,7 +209,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 
-// --- 4. Multi-Video Source Management ---
+// --- 5. Multi-Video Source Management ---
 
 function renderVideoSources() {
     videoSourceList.innerHTML = '';
@@ -260,7 +237,6 @@ fileInput.addEventListener('change', function(e) {
     Array.from(files).forEach(file => {
         const fileURL = URL.createObjectURL(file);
         
-        // Create a new hidden video element
         const videoElement = document.createElement('video');
         videoElement.src = fileURL;
         videoElement.loop = true;
@@ -268,35 +244,33 @@ fileInput.addEventListener('change', function(e) {
         videoElement.playsInline = true;
         videoElement.style.display = 'none';
         
-        // Start playing to ensure the video loads and loops correctly
         videoElement.play().catch(e => console.error("Video auto-play failed, usually due to browser policy:", e));
 
         const newSource = {
-            id: crypto.randomUUID(), // Unique ID for referencing
+            id: crypto.randomUUID(), 
             name: file.name,
             element: videoElement
         };
 
-        // Add to global state and to the DOM (hidden)
         videoSources.push(newSource);
         document.body.appendChild(videoElement);
     });
     
     renderVideoSources();
-    e.target.value = null; // Clear input
+    e.target.value = null;
 });
 
 
-// --- 5. Add Surface with Source Selection ---
+// --- 6. Add Surface with Source Selection ---
 
 addSurfaceBtn.addEventListener('click', () => {
     if (videoSources.length === 0) {
         // Use custom modal instead of alert for better UX
-        alert("Please upload at least one video source first!");
+        // Using alert() here temporarily as a quick fix, ideally replaced by a modal
+        alert("Please upload at least one video source first!"); 
         return;
     }
 
-    // 1. Create a prompt list of choices
     let promptMessage = "Select the video source for the new surface:\n";
     videoSources.forEach((source, index) => {
         promptMessage += `${index + 1}: ${source.name}\n`;
@@ -305,12 +279,10 @@ addSurfaceBtn.addEventListener('click', () => {
     let selection;
     let selectedSource;
 
-    // Use a loop to keep prompting until valid input or cancellation
     while (!selectedSource) {
         selection = prompt(promptMessage);
 
         if (selection === null) {
-            // User cancelled
             return; 
         }
 
@@ -323,18 +295,18 @@ addSurfaceBtn.addEventListener('click', () => {
         }
     }
     
-    // 2. Create the new surface with the selected source ID
+    // Create the new surface with the selected source ID
     const cx = canvas.width / 2 - 100;
     const cy = canvas.height / 2 - 100;
     surfaces.push(new Surface(cx, cy, 200, 200, selectedSource.id));
 });
 
 
-// --- 6. Initial Render & Loop ---
+// --- 7. Animation Loop ---
 renderVideoSources();
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // Draw calls now rely on the sourceId stored in the Surface object
+    // Draw calls rely on the sourceId stored in the Surface object
     surfaces.forEach(surface => surface.draw(ctx, isLive));
     requestAnimationFrame(animate);
 }
