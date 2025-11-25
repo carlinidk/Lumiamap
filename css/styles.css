@@ -139,3 +139,24 @@ canvas {
     display: flex;
 }
 
+/* New Source List Styling */
+.source-item {
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    background-color: #1f2937;
+    font-size: 0.875rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid transparent;
+}
+.source-item.active {
+    border-color: #3b82f6;
+    background-color: #1e3a8a;
+}
+.source-name {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
