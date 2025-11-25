@@ -5,26 +5,27 @@ const canvas = document.getElementById('main-canvas');
 const ctx = canvas.getContext('2d');
 const workspace = document.getElementById('workspace');
 const sidebar = document.getElementById('sidebar');
-const videoElement = document.getElementById('source-video');
 const fileInput = document.getElementById('video-upload');
-const videoStatus = document.getElementById('video-status');
+const videoSourceList = document.getElementById('video-source-list');
+const noSourcesMessage = document.getElementById('no-sources-message');
 const goLiveBtn = document.getElementById('go-live-btn');
 const toggleUiBtn = document.getElementById('toggle-ui-btn');
+const addSurfaceBtn = document.getElementById('add-surface-btn');
 
-let surfaces = [];      // Array to store our "Quad" shapes
-let activePoint = null; // Point currently being dragged
+let surfaces = [];
+let videoSources = []; // [{ id: string, name: string, element: HTMLVideoElement }]
+let activePoint = null; 
 let activeSurface = null; 
-let isLive = false;     // State flag for Presentation Mode
-
-// GLOBAL VARIABLES TO STORE DIMENSIONS BEFORE FULLSCREEN
+let isLive = false;
 let previousWidth = 0;
 let previousHeight = 0;
 
 
 // --- 2. Surface Class (The Quad Shape) ---
 class Surface {
-    constructor(x, y, w, h) {
+    constructor(x, y, w, h, sourceId) {
         this.id = Date.now();
+        this.sourceId = sourceId; // Reference to the video source
         // 4 Points: TL, TR, BR, BL
         this.points = [
             { x: x, y: y },         
@@ -35,7 +36,11 @@ class Surface {
         this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
     }
 
-    draw(ctx, video, isLive) {
+    draw(ctx, isLive) {
+        // Find the correct video element for this surface
+        const source = videoSources.find(s => s.id === this.sourceId);
+        const video = source ? source.element : null;
+
         // A. Create Path
         ctx.beginPath();
         ctx.moveTo(this.points[0].x, this.points[0].y);
@@ -55,10 +60,10 @@ class Surface {
             const minY = Math.min(...this.points.map(p => p.y));
             const maxY = Math.max(...this.points.map(p => p.y));
             
-            ctx.drawImage(video, minX, minY, maxX - minX, maxY - minX); // Fixed typo here (was maxX - minX)
+            ctx.drawImage(video, minX, minY, maxX - minX, maxY - minY);
         } else {
             // Fallback color
-            ctx.fillStyle = isLive ? '#ffffff' : this.color;
+            ctx.fillStyle = isLive ? '#000000' : this.color;
             ctx.fill();
             
             // Text label if not live
@@ -67,7 +72,8 @@ class Surface {
                 ctx.fill();
                 ctx.fillStyle = 'white';
                 ctx.font = '14px sans-serif';
-                ctx.fillText("No Video", this.points[0].x + 10, this.points[0].y + 20);
+                const label = source ? source.name.substring(0, 15) : "MISSING VIDEO";
+                ctx.fillText(`Source: ${label}`, this.points[0].x + 10, this.points[0].y + 20);
             }
         }
         ctx.restore();
@@ -78,7 +84,7 @@ class Surface {
             ctx.strokeStyle = '#3b82f6';
             ctx.lineWidth = 1;
             ctx.setLineDash([5, 5]);
-            ctx.stroke(new Path2D(ctx.currentPath)); // Re-use path
+            ctx.stroke(new Path2D(ctx.currentPath));
             ctx.setLineDash([]);
 
             // Corners
@@ -94,7 +100,6 @@ class Surface {
     }
 
     contains(x, y) {
-        // Ray-casting algorithm for point in polygon
         let inside = false;
         for (let i = 0, j = this.points.length - 1; i < this.points.length; j = i++) {
             const xi = this.points[i].x, yi = this.points[i].y;
@@ -107,7 +112,7 @@ class Surface {
     }
 }
 
-// --- 3. Interaction Logic ---
+// --- 3. Interaction Logic & Resizing ---
 function resize() {
     canvas.width = workspace.clientWidth;
     canvas.height = workspace.clientHeight;
@@ -122,12 +127,10 @@ function getMousePos(evt) {
     return { x: clientX - rect.left, y: clientY - rect.top };
 }
 
-// Input Handlers
 const handleStart = (e) => {
     if (isLive) return;
     const pos = getMousePos(e);
     
-    // 1. Check for corner clicks (Resize)
     for (let s of surfaces) {
         for (let p of s.points) {
             if (Math.hypot(p.x - pos.x, p.y - pos.y) < 15) {
@@ -155,7 +158,6 @@ const handleEnd = () => {
 const handleDoubleClick = (e) => {
     if (isLive) return;
     const pos = getMousePos(e);
-    // Delete surface if clicked inside
     for (let i = surfaces.length - 1; i >= 0; i--) {
         if (surfaces[i].contains(pos.x, pos.y)) {
             surfaces.splice(i, 1);
@@ -164,7 +166,6 @@ const handleDoubleClick = (e) => {
     }
 };
 
-// Attach Events
 canvas.addEventListener('mousedown', handleStart);
 canvas.addEventListener('mousemove', handleMove);
 canvas.addEventListener('mouseup', handleEnd);
@@ -173,73 +174,10 @@ canvas.addEventListener('touchstart', handleStart, {passive: false});
 canvas.addEventListener('touchmove', handleMove, {passive: false});
 canvas.addEventListener('touchend', handleEnd);
 
-// --- 4. UI Controls ---
 
-// Add Surface
-document.getElementById('add-surface-btn').addEventListener('click', () => {
-    const cx = canvas.width / 2 - 100;
-    const cy = canvas.height / 2 - 100;
-    surfaces.push(new Surface(cx, cy, 200, 200));
-});
-
-// Clear All
-document.getElementById('clear-all-btn').addEventListener('click', () => {
-    if(confirm("Delete all projection surfaces?")) surfaces = [];
-});
-
-// Video Upload
-fileInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const fileURL = URL.createObjectURL(file);
-    videoElement.src = fileURL;
-    videoElement.play();
-    videoStatus.innerText = file.name;
-});
-
-// Toggle Live Mode
-function toggleLiveMode() {
-    isLive = !isLive;
-    if (isLive) {
-        // --- GOING LIVE ---
-        // 1. Store current non-fullscreen dimensions
-        previousWidth = canvas.width;
-        previousHeight = canvas.height;
-
-        sidebar.classList.add('hidden-ui');
-        workspace.classList.add('live-mode');
-        
-        // 2. Request Fullscreen (which triggers resize event)
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().then(() => {
-                // Wait for the native resize event to fire (which updates canvas.width/height)
-                // Then, scale the points based on the new dimensions
-                scaleSurfaces(previousWidth, previousHeight, canvas.width, canvas.height);
-            });
-        }
-
-    } else {
-        // --- EXITING LIVE MODE ---
-        // 1. Exit Fullscreen
-        if (document.exitFullscreen) {
-            document.exitFullscreen().then(() => {
-                // Fullscreen exit also triggers a resize event naturally,
-                // but we need to explicitly scale back based on the stored live dimensions
-                // The resize() function updates canvas.width/height to the new window size
-                const newWidth = canvas.width;
-                const newHeight = canvas.height;
-                scaleSurfaces(previousWidth, previousHeight, newWidth, newHeight); 
-            }).catch(err => {}); // Ignore error if not fullscreen
-        }
-        
-        sidebar.classList.remove('hidden-ui');
-        workspace.classList.remove('live-mode');
-    }
-}
-
-// Function to calculate and apply the scaling factor
+// Scaling logic for fullscreen toggle
 function scaleSurfaces(oldW, oldH, newW, newH) {
-    if (oldW === newW && oldH === newH) return; // No need to scale
+    if (oldW === 0 || oldH === 0 || (oldW === newW && oldH === newH)) return;
 
     const scaleX = newW / oldW;
     const scaleY = newH / oldH;
@@ -251,24 +189,153 @@ function scaleSurfaces(oldW, oldH, newW, newH) {
         });
     });
 
-    // Update stored dimensions for the next toggle
     previousWidth = newW;
     previousHeight = newH;
 }
 
+function toggleLiveMode() {
+    isLive = !isLive;
+    if (isLive) {
+        // --- GOING LIVE ---
+        previousWidth = canvas.width;
+        previousHeight = canvas.height;
+
+        sidebar.classList.add('hidden-ui');
+        workspace.classList.add('live-mode');
+        
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().then(() => {
+                scaleSurfaces(previousWidth, previousHeight, canvas.width, canvas.height);
+            });
+        }
+
+    } else {
+        // --- EXITING LIVE MODE ---
+        if (document.exitFullscreen) {
+            document.exitFullscreen().then(() => {
+                const newWidth = canvas.width;
+                const newHeight = canvas.height;
+                scaleSurfaces(previousWidth, previousHeight, newWidth, newHeight); 
+            }).catch(err => {});
+        }
+        
+        sidebar.classList.remove('hidden-ui');
+        workspace.classList.remove('live-mode');
+    }
+}
 
 goLiveBtn.addEventListener('click', toggleLiveMode);
 toggleUiBtn.addEventListener('click', toggleLiveMode);
 
-// Escape Key Support
 document.addEventListener('keydown', (e) => {
     if (e.key === "Escape" && isLive) toggleLiveMode();
 });
 
-// --- 5. Animation Loop ---
+
+// --- 4. Multi-Video Source Management ---
+
+function renderVideoSources() {
+    videoSourceList.innerHTML = '';
+    if (videoSources.length === 0) {
+        noSourcesMessage.style.display = 'block';
+        return;
+    }
+    noSourcesMessage.style.display = 'none';
+
+    videoSources.forEach(source => {
+        const div = document.createElement('div');
+        div.className = 'source-item';
+        div.innerHTML = `
+            <span class="source-name" title="${source.name}">${source.name}</span>
+            <i data-lucide="video" class="w-4 h-4 text-green-400"></i>
+        `;
+        videoSourceList.appendChild(div);
+        lucide.createIcons();
+    });
+}
+
+fileInput.addEventListener('change', function(e) {
+    const files = e.target.files;
+    
+    Array.from(files).forEach(file => {
+        const fileURL = URL.createObjectURL(file);
+        
+        // Create a new hidden video element
+        const videoElement = document.createElement('video');
+        videoElement.src = fileURL;
+        videoElement.loop = true;
+        videoElement.muted = true;
+        videoElement.playsInline = true;
+        videoElement.style.display = 'none';
+        
+        // Start playing to ensure the video loads and loops correctly
+        videoElement.play().catch(e => console.error("Video auto-play failed, usually due to browser policy:", e));
+
+        const newSource = {
+            id: crypto.randomUUID(), // Unique ID for referencing
+            name: file.name,
+            element: videoElement
+        };
+
+        // Add to global state and to the DOM (hidden)
+        videoSources.push(newSource);
+        document.body.appendChild(videoElement);
+    });
+    
+    renderVideoSources();
+    e.target.value = null; // Clear input
+});
+
+
+// --- 5. Add Surface with Source Selection ---
+
+addSurfaceBtn.addEventListener('click', () => {
+    if (videoSources.length === 0) {
+        // Use custom modal instead of alert for better UX
+        alert("Please upload at least one video source first!");
+        return;
+    }
+
+    // 1. Create a prompt list of choices
+    let promptMessage = "Select the video source for the new surface:\n";
+    videoSources.forEach((source, index) => {
+        promptMessage += `${index + 1}: ${source.name}\n`;
+    });
+    
+    let selection;
+    let selectedSource;
+
+    // Use a loop to keep prompting until valid input or cancellation
+    while (!selectedSource) {
+        selection = prompt(promptMessage);
+
+        if (selection === null) {
+            // User cancelled
+            return; 
+        }
+
+        const index = parseInt(selection) - 1;
+        
+        if (index >= 0 && index < videoSources.length) {
+            selectedSource = videoSources[index];
+        } else {
+            alert("Invalid selection. Please enter the number corresponding to the video.");
+        }
+    }
+    
+    // 2. Create the new surface with the selected source ID
+    const cx = canvas.width / 2 - 100;
+    const cy = canvas.height / 2 - 100;
+    surfaces.push(new Surface(cx, cy, 200, 200, selectedSource.id));
+});
+
+
+// --- 6. Initial Render & Loop ---
+renderVideoSources();
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    surfaces.forEach(surface => surface.draw(ctx, videoElement, isLive));
+    // Draw calls now rely on the sourceId stored in the Surface object
+    surfaces.forEach(surface => surface.draw(ctx, isLive));
     requestAnimationFrame(animate);
 }
 animate();
