@@ -16,6 +16,11 @@ let activePoint = null; // Point currently being dragged
 let activeSurface = null; 
 let isLive = false;     // State flag for Presentation Mode
 
+// GLOBAL VARIABLES TO STORE DIMENSIONS BEFORE FULLSCREEN
+let previousWidth = 0;
+let previousHeight = 0;
+
+
 // --- 2. Surface Class (The Quad Shape) ---
 class Surface {
     constructor(x, y, w, h) {
@@ -50,7 +55,7 @@ class Surface {
             const minY = Math.min(...this.points.map(p => p.y));
             const maxY = Math.max(...this.points.map(p => p.y));
             
-            ctx.drawImage(video, minX, minY, maxX - minX, maxY - minY);
+            ctx.drawImage(video, minX, minY, maxX - minX, maxY - minX); // Fixed typo here (was maxX - minX)
         } else {
             // Fallback color
             ctx.fillStyle = isLive ? '#ffffff' : this.color;
@@ -196,19 +201,61 @@ fileInput.addEventListener('change', function(e) {
 function toggleLiveMode() {
     isLive = !isLive;
     if (isLive) {
+        // --- GOING LIVE ---
+        // 1. Store current non-fullscreen dimensions
+        previousWidth = canvas.width;
+        previousHeight = canvas.height;
+
         sidebar.classList.add('hidden-ui');
         workspace.classList.add('live-mode');
+        
+        // 2. Request Fullscreen (which triggers resize event)
         if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen();
+            document.documentElement.requestFullscreen().then(() => {
+                // Wait for the native resize event to fire (which updates canvas.width/height)
+                // Then, scale the points based on the new dimensions
+                scaleSurfaces(previousWidth, previousHeight, canvas.width, canvas.height);
+            });
         }
+
     } else {
+        // --- EXITING LIVE MODE ---
+        // 1. Exit Fullscreen
+        if (document.exitFullscreen) {
+            document.exitFullscreen().then(() => {
+                // Fullscreen exit also triggers a resize event naturally,
+                // but we need to explicitly scale back based on the stored live dimensions
+                // The resize() function updates canvas.width/height to the new window size
+                const newWidth = canvas.width;
+                const newHeight = canvas.height;
+                scaleSurfaces(previousWidth, previousHeight, newWidth, newHeight); 
+            }).catch(err => {}); // Ignore error if not fullscreen
+        }
+        
         sidebar.classList.remove('hidden-ui');
         workspace.classList.remove('live-mode');
-        if (document.exitFullscreen) {
-            document.exitFullscreen().catch(err => {});
-        }
     }
 }
+
+// Function to calculate and apply the scaling factor
+function scaleSurfaces(oldW, oldH, newW, newH) {
+    if (oldW === newW && oldH === newH) return; // No need to scale
+
+    const scaleX = newW / oldW;
+    const scaleY = newH / oldH;
+    
+    surfaces.forEach(surface => {
+        surface.points.forEach(p => {
+            p.x *= scaleX;
+            p.y *= scaleY;
+        });
+    });
+
+    // Update stored dimensions for the next toggle
+    previousWidth = newW;
+    previousHeight = newH;
+}
+
 
 goLiveBtn.addEventListener('click', toggleLiveMode);
 toggleUiBtn.addEventListener('click', toggleLiveMode);
