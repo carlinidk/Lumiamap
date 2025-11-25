@@ -25,28 +25,31 @@
             </div>
 
             <div class="control-group">
-                <h3 class="section-title">Sources</h3>
-                <input type="file" id="video-upload" accept="video/*" class="hidden">
+                <h3 class="section-title">Video Sources</h3>
+                <input type="file" id="video-upload" accept="video/*" multiple class="hidden">
                 <button onclick="document.getElementById('video-upload').click()" class="btn btn-secondary mb-2">
-                    <i data-lucide="upload"></i> Upload Video
+                    <i data-lucide="upload"></i> Add Video(s)
                 </button>
-                <div id="video-status" class="text-xs text-gray-400 truncate">No video loaded</div>
+                <!-- This is the list that will show all loaded videos -->
+                <div id="video-source-list" class="space-y-1">
+                    <p class="text-xs text-gray-500" id="no-sources-message">No videos loaded yet.</p>
+                </div>
             </div>
 
             <div class="control-group">
                 <h3 class="section-title">Surfaces</h3>
-                <button id="add-surface-btn" class="btn btn-secondary mb-2">
-                    <i data-lucide="plus-square"></i> Add Quad Surface
+                <button id="add-surface-btn" class="btn btn-primary mb-2">
+                    <i data-lucide="plus-square"></i> Add Mapped Surface
                 </button>
                 <button id="clear-all-btn" class="btn btn-danger">
-                    <i data-lucide="trash-2"></i> Clear All
+                    <i data-lucide="trash-2"></i> Clear All Surfaces
                 </button>
             </div>
 
             <div class="control-group mt-auto">
                 <div class="instructions">
-                    <p>1. Drag corners to map to object.</p>
-                    <p>2. Double click center to delete.</p>
+                    <p>1. Map surface points to physical objects.</p>
+                    <p>2. Double click inside a surface to delete.</p>
                 </div>
                 <button id="go-live-btn" class="btn btn-primary">
                     <i data-lucide="play-circle"></i> GO LIVE (Fullscreen)
@@ -65,12 +68,8 @@
         </main>
     </div>
 
-    <!-- Hidden Video Element for Source -->
-    <video id="source-video" class="hidden-video" loop muted playsinline></video>
-
     <!-- Main Application Logic -->
     <script src="js/main.js"></script>
 </body>
 </html>
-
 
