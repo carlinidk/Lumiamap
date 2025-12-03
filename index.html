@@ -45,13 +45,18 @@
 
             <!-- Scrollable content area -->
             <div class="sidebar-content">
-                <!-- Video Sources Section -->
+                <!-- Media Sources Section -->
                 <div class="control-group">
-                    <h3 class="section-title">Video Sources</h3>
+                    <h3 class="section-title">Media Sources</h3>
                     <input type="file" id="video-upload" accept="video/*,image/*" multiple class="hidden">
-                    <button onclick="document.getElementById('video-upload').click()" class="btn btn-secondary mb-2">
-                        <i data-lucide="upload"></i> Add Media
-                    </button>
+                    <div class="flex gap-2 mb-2">
+                        <button onclick="document.getElementById('video-upload').click()" class="btn btn-secondary flex-1">
+                            <i data-lucide="upload"></i> Upload File
+                        </button>
+                        <button id="add-code-snippet-btn" class="btn btn-secondary flex-1">
+                            <i data-lucide="code"></i> Code Snippet
+                        </button>
+                    </div>
                     <div id="video-source-list" class="space-y-2">
                         <p class="text-xs text-gray-500" id="no-sources-message">No media loaded yet.</p>
                     </div>
@@ -174,8 +179,64 @@
         </div>
     </div>
 
+    <!-- Modal: Code Editor -->
+    <div id="code-editor-modal" class="modal">
+        <div class="modal-content code-editor-wrapper">
+            <div class="modal-header">
+                <h2>Code Snippet Editor</h2>
+                <button class="modal-close" onclick="closeCodeEditorModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="code-editor-tabs">
+                    <button class="tab-btn active" data-mode="canvas">
+                        <i data-lucide="palette"></i> Canvas 2D
+                    </button>
+                    <button class="tab-btn" data-mode="glsl">
+                        <i data-lucide="zap"></i> GLSL Shader
+                    </button>
+                    <button class="tab-btn" data-mode="p5">
+                        <i data-lucide="sparkles"></i> p5.js
+                    </button>
+                </div>
+                
+                <div class="code-editor-container">
+                    <textarea id="code-editor" spellcheck="false"></textarea>
+                </div>
+                
+                <div class="code-editor-footer">
+                    <input type="text" id="snippet-name" placeholder="Snippet name (e.g., 'Rainbow Wave')" class="snippet-name-input">
+                    <div class="flex gap-2">
+                        <button id="preview-code-btn" class="btn btn-secondary">
+                            <i data-lucide="eye"></i> Preview
+                        </button>
+                        <button id="save-snippet-btn" class="btn btn-primary">
+                            <i data-lucide="save"></i> Save as Source
+                        </button>
+                    </div>
+                </div>
+
+                <div class="code-templates">
+                    <h4 class="text-xs font-bold text-gray-400 mb-2">Templates:</h4>
+                    <div class="templates-grid">
+                        <button class="template-btn" data-template="canvas-gradient">Gradient</button>
+                        <button class="template-btn" data-template="canvas-particles">Particles</button>
+                        <button class="template-btn" data-template="canvas-wave">Wave</button>
+                        <button class="template-btn" data-template="glsl-plasma">Plasma</button>
+                        <button class="template-btn" data-template="glsl-fractal">Fractal</button>
+                        <button class="template-btn" data-template="p5-circles">Circles</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Hidden file input for loading projects -->
     <input type="file" id="project-load-input" accept=".json" class="hidden">
+
+    <!-- p5.js library (loaded on demand) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js" defer></script>
 
     <!-- Main Application Logic -->
     <script src="js/main.js"></script>
