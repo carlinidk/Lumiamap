@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LuminaMap - Projection Mapping Tool</title>
+    <title>LuminaMap Pro - Projection Mapping Tool</title>
     
     <!-- Tailwind CSS for layout utility -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,59 +16,168 @@
 </head>
 <body>
 
-    <!-- Main Workspace now takes up the whole viewport -->
+    <!-- Main Workspace -->
     <main id="workspace">
         <!-- Canvas is always 100% -->
         <canvas id="main-canvas"></canvas>
         
-        <!-- Sidebar Controls (Floating Overlay) -->
+        <!-- Floating Eye Toggle Button (Always visible, left side) -->
+        <button id="toggle-ui-btn" class="eye-toggle" title="Toggle UI">
+            <i data-lucide="eye" id="eye-icon"></i>
+            <i data-lucide="eye-off" id="eye-off-icon" style="display:none;"></i>
+        </button>
+
+        <!-- Floating Live Mode Toggle (Right side) -->
+        <button id="go-live-btn" class="live-toggle" title="Toggle Live Mode (Space)">
+            <i data-lucide="play-circle" id="play-icon"></i>
+            <i data-lucide="edit" id="edit-icon" style="display:none;"></i>
+        </button>
+        
+        <!-- Sidebar Controls (Collapsible Overlay) -->
         <aside id="sidebar">
-            <div class="flex items-center gap-2 mb-6 text-blue-400">
-                <i data-lucide="projector" class="w-6 h-6"></i>
-                <h1 class="text-xl font-bold tracking-tight">LuminaMap</h1>
-            </div>
-
-            <div class="control-group">
-                <h3 class="section-title">Video Sources</h3>
-                <input type="file" id="video-upload" accept="video/*" multiple class="hidden">
-                <button onclick="document.getElementById('video-upload').click()" class="btn btn-secondary mb-2">
-                    <i data-lucide="upload"></i> Add Video(s)
-                </button>
-                <div id="video-source-list" class="space-y-1">
-                    <p class="text-xs text-gray-500" id="no-sources-message">No videos loaded yet.</p>
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2 text-blue-400">
+                    <i data-lucide="projector" class="w-6 h-6"></i>
+                    <h1 class="text-xl font-bold tracking-tight">LuminaMap Pro</h1>
                 </div>
+                <div class="text-xs text-gray-500">v2.0</div>
             </div>
 
-            <div class="control-group">
-                <h3 class="section-title">Surfaces</h3>
-                <button id="add-surface-btn" class="btn btn-primary mb-2">
-                    <i data-lucide="plus-square"></i> Add Mapped Surface
-                </button>
-                <button id="clear-all-btn" class="btn btn-danger">
-                    <i data-lucide="trash-2"></i> Clear All Surfaces
-                </button>
-            </div>
-
-            <div class="control-group mt-auto">
-                <div class="instructions">
-                    <p>1. Map surface points to physical objects.</p>
-                    <p>2. Double click inside a surface to delete.</p>
+            <!-- Scrollable content area -->
+            <div class="sidebar-content">
+                <!-- Video Sources Section -->
+                <div class="control-group">
+                    <h3 class="section-title">Video Sources</h3>
+                    <input type="file" id="video-upload" accept="video/*,image/*" multiple class="hidden">
+                    <button onclick="document.getElementById('video-upload').click()" class="btn btn-secondary mb-2">
+                        <i data-lucide="upload"></i> Add Media
+                    </button>
+                    <div id="video-source-list" class="space-y-2">
+                        <p class="text-xs text-gray-500" id="no-sources-message">No media loaded yet.</p>
+                    </div>
                 </div>
-                <!-- The GO LIVE button now only hides the sidebar -->
-                <button id="go-live-btn" class="btn btn-primary">
-                    <i data-lucide="play-circle"></i> GO LIVE (Hide Controls)
-                </button>
+
+                <!-- Surfaces Section -->
+                <div class="control-group">
+                    <h3 class="section-title">Surfaces (<span id="surface-count">0</span>)</h3>
+                    <button id="add-surface-btn" class="btn btn-primary mb-2">
+                        <i data-lucide="plus-square"></i> Add Surface
+                    </button>
+                    <div id="surface-list" class="space-y-2">
+                        <p class="text-xs text-gray-500">Add a surface to begin mapping.</p>
+                    </div>
+                </div>
+
+                <!-- Grid & Snap Settings -->
+                <div class="control-group">
+                    <h3 class="section-title">Grid & Alignment</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="show-grid" checked>
+                        <span>Show Grid</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="snap-to-grid">
+                        <span>Snap to Grid (Shift)</span>
+                    </label>
+                    <div class="mt-2">
+                        <label class="text-xs text-gray-400">Grid Size: <span id="grid-size-value">20</span>px</label>
+                        <input type="range" id="grid-size" min="10" max="100" value="20" class="w-full">
+                    </div>
+                </div>
+
+                <!-- Project Management -->
+                <div class="control-group">
+                    <h3 class="section-title">Project</h3>
+                    <button id="save-project-btn" class="btn btn-secondary mb-2">
+                        <i data-lucide="save"></i> Save Project
+                    </button>
+                    <button id="load-project-btn" class="btn btn-secondary mb-2">
+                        <i data-lucide="folder-open"></i> Load Project
+                    </button>
+                    <button id="clear-all-btn" class="btn btn-danger">
+                        <i data-lucide="trash-2"></i> Clear All
+                    </button>
+                </div>
+
+                <!-- Instructions -->
+                <div class="control-group">
+                    <div class="instructions">
+                        <h4 class="text-xs font-bold mb-2 text-gray-400">Keyboard Shortcuts:</h4>
+                        <p><kbd>Space</kbd> Toggle Live Mode</p>
+                        <p><kbd>Delete</kbd> Delete Selected</p>
+                        <p><kbd>Ctrl+Z</kbd> Undo</p>
+                        <p><kbd>Ctrl+Y</kbd> Redo</p>
+                        <p><kbd>Arrows</kbd> Nudge Points</p>
+                        <p><kbd>Shift</kbd> Hold for Snap</p>
+                    </div>
+                </div>
             </div>
         </aside>
-        
-        <!-- Floating Show Controls Button (Visible in Live Mode) -->
-        <div id="toggle-ui-btn" title="Show Controls">
-            <i data-lucide="menu"></i>
-        </div>
     </main>
+
+    <!-- Modal: Source Selection -->
+    <div id="source-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Select Media Source</h2>
+                <button class="modal-close" onclick="closeSourceModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div id="source-selection-grid" class="source-grid">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Surface Properties -->
+    <div id="properties-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Surface Properties</h2>
+                <button class="modal-close" onclick="closePropertiesModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="property-group">
+                    <label>Opacity: <span id="opacity-value">100</span>%</label>
+                    <input type="range" id="surface-opacity" min="0" max="100" value="100">
+                </div>
+                <div class="property-group">
+                    <label>Brightness: <span id="brightness-value">100</span>%</label>
+                    <input type="range" id="surface-brightness" min="0" max="200" value="100">
+                </div>
+                <div class="property-group">
+                    <label>Contrast: <span id="contrast-value">100</span>%</label>
+                    <input type="range" id="surface-contrast" min="0" max="200" value="100">
+                </div>
+                <div class="property-group">
+                    <label>Edge Feather: <span id="feather-value">0</span>px</label>
+                    <input type="range" id="surface-feather" min="0" max="50" value="0">
+                </div>
+                <div class="property-group">
+                    <label>Blend Mode:</label>
+                    <select id="blend-mode">
+                        <option value="normal">Normal</option>
+                        <option value="multiply">Multiply</option>
+                        <option value="screen">Screen</option>
+                        <option value="overlay">Overlay</option>
+                        <option value="lighten">Lighten</option>
+                        <option value="darken">Darken</option>
+                    </select>
+                </div>
+                <button id="change-source-btn" class="btn btn-secondary mt-4">
+                    <i data-lucide="refresh-cw"></i> Change Source
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for loading projects -->
+    <input type="file" id="project-load-input" accept=".json" class="hidden">
 
     <!-- Main Application Logic -->
     <script src="js/main.js"></script>
 </body>
 </html>
-
