@@ -539,3 +539,142 @@ input[type="range"]::-moz-range-thumb {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     }
 }
+
+/* Code Editor Styles */
+.code-editor-wrapper .modal-content {
+    max-width: 900px;
+}
+
+.code-editor-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem 0;
+    border-bottom: 1px solid #333;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 0.375rem 0.375rem 0 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.tab-btn.active {
+    background: #1a1a1a;
+    color: #3b82f6;
+    border-bottom: 2px solid #3b82f6;
+}
+
+.code-editor-container {
+    position: relative;
+    height: 400px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+#code-editor {
+    width: 100%;
+    height: 100%;
+    background: #0a0a0a;
+    color: #e4e4e7;
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    padding: 1rem;
+    border: none;
+    outline: none;
+    resize: none;
+    tab-size: 4;
+}
+
+#code-editor::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+#code-editor::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#code-editor::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+.code-editor-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.snippet-name-input {
+    width: 100%;
+    padding: 0.75rem;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 0.375rem;
+    color: white;
+    font-size: 0.875rem;
+}
+
+.snippet-name-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.code-templates {
+    padding-top: 1rem;
+    border-top: 1px solid #333;
+}
+
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.5rem;
+}
+
+.template-btn {
+    padding: 0.5rem;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 0.375rem;
+    color: #e4e4e7;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.template-btn:hover {
+    background: #2a2a2a;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
