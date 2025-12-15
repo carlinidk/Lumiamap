@@ -372,13 +372,77 @@ const handleDoubleClick = (e) => {
     }
 };
 
-canvas.addEventListener('mousedown', handleStart);
-canvas.addEventListener('mousemove', handleMove);
-canvas.addEventListener('mouseup', handleEnd);
-canvas.addEventListener('dblclick', handleDoubleClick);
-canvas.addEventListener('touchstart', handleStart, {passive: false});
-canvas.addEventListener('touchmove', handleMove, {passive: false});
-canvas.addEventListener('touchend', handleEnd);
+// ================================
+// POINTER (MOUSE + TOUCH + STYLUS)
+// ================================
+
+canvas.addEventListener('pointerdown', onPointerDown);
+canvas.addEventListener('pointermove', onPointerMove);
+canvas.addEventListener('pointerup', onPointerUp);
+canvas.addEventListener('pointercancel', onPointerUp);
+
+function getPointerPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: (e.clientX - rect.left),
+        y: (e.clientY - rect.top)
+    };
+}
+
+function onPointerDown(e) {
+    if (isLive) return;
+    e.preventDefault();
+    canvas.setPointerCapture(e.pointerId);
+
+    // Ignore UI area
+    if (uiVisible) {
+        const sidebarRect = sidebar.getBoundingClientRect();
+        if (e.clientX > sidebarRect.left) return;
+    }
+
+    const pos = getPointerPos(e);
+
+    for (let s of surfaces) {
+        for (let p of s.points) {
+            if (Math.hypot(p.x - pos.x, p.y - pos.y) < 15) {
+                activePoint = p;
+                activeSurface = s;
+                selectedSurface = s;
+                renderSurfaceList();
+                return;
+            }
+        }
+    }
+
+    for (let i = surfaces.length - 1; i >= 0; i--) {
+        if (surfaces[i].contains(pos.x, pos.y)) {
+            selectedSurface = surfaces[i];
+            renderSurfaceList();
+            return;
+        }
+    }
+
+    selectedSurface = null;
+    renderSurfaceList();
+}
+
+function onPointerMove(e) {
+    if (!activePoint || isLive) return;
+    e.preventDefault();
+
+    let pos = getPointerPos(e);
+    pos = snapToGrid(pos);
+
+    activePoint.x = pos.x;
+    activePoint.y = pos.y;
+}
+
+function onPointerUp(e) {
+    if (activePoint) saveState();
+    activePoint = null;
+    activeSurface = null;
+    canvas.releasePointerCapture(e.pointerId);
+}
 
 // --- Keyboard Shortcuts ---
 document.addEventListener('keydown', (e) => {
